@@ -1,0 +1,481 @@
+<!-- oasystem/templates/oasystem/dashboard.html -->
+{% extends 'base.html' %}
+
+{% load custom_filters %}  <!-- 加载自定义过滤器 -->
+
+{% block title %}系统仪表盘{% endblock %}
+
+{% block page_title %}系统仪表盘{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 第一行：统计卡片 -->
+    <div class="row g-3 mb-4">
+        <!-- 今日出勤率 -->
+        <div class="col-md-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-calendar-check fs-4"></i><br>
+                        今日出勤率
+                    </div>
+                    <h2 class="text-primary">{{ attendance_rate }}%</h2>
+                    <div class="small text-muted">
+                        {{ punch_cnt }}/{{ total_staff }}人
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 待办审批 -->
+        <div class="col-md-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-bell fs-4"></i><br>
+                        待办审批
+                    </div>
+                    <h2 class="text-warning">{{ pending }}</h2>
+                    <div class="mt-2">
+                        {% if pending > 0 %}
+                            <a href="{% url 'approval:pending_list' %}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-arrow-right-circle"></i> 去处理
+                            </a>
+                        {% else %}
+                            <span class="text-muted small">暂无待办</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日请假 -->
+        <div class="col-md-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-calendar-x fs-4"></i><br>
+                        今日请假
+                    </div>
+                    <h2 class="text-info">{{ today_leaves|default:"0" }}</h2>
+                    <div class="small text-muted">
+                        当前在请假中
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 本周出勤 -->
+        <div class="col-md-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-calendar-week fs-4"></i><br>
+                        本周出勤
+                    </div>
+                    <h2 class="text-success">{{ week_punch|default:"0" }}</h2>
+                    <div class="small text-muted">
+                        本周已打卡人数
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第二行：图表和数据 -->
+    <div class="row g-3 mb-4">
+        <!-- 请假分布图表 -->
+        <div class="col-md-8">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-bar-chart me-2"></i>本月请假分布</span>
+                    <small class="text-muted">{{ today|date:"Y年m月" }}</small>
+                </div>
+                <div class="card-body">
+                    {% if leave_stats %}
+                        <div style="height: 250px;">
+                            <canvas id="leaveChart" width="400" height="250"></canvas>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-1"></i>
+                            <p class="mt-2">本月暂无请假记录</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 请假类型详情 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-list-check me-2"></i>请假类型统计
+                </div>
+                <div class="card-body p-0">
+
+                    {% if leave_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>类型</th>
+                                        <th class="text-end">人数</th>
+                                        <th class="text-end">占比</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in leave_stats %}
+                                    <tr>
+                                        <td>{{ stat.leave_type }}</td>
+                                        <td class="text-end">{{ stat.cnt }}</td>
+                                        <td class="text-end">
+                                            {% if stat.percentage %}
+                                                {{ stat.percentage|floatformat:1 }}%
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="table-light">
+                                        <td><strong>总计</strong></td>
+                                        <td class="text-end">
+                                            <strong>{{ total_leaves }}</strong>
+                                        </td>
+                                        <td class="text-end">100%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-database-slash fs-3"></i>
+                            <p class="mt-2">暂无数据</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+     <!-- ========== 新增：最新请假申请（放在这里） ========== -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-clock-history me-2"></i>最新请假申请
+                </div>
+                <div class="card-body">
+                    {% if latest_leaves %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>申请人</th>
+                                        <th>请假类型</th>
+                                        <th>请假时间</th>
+                                        <th>时长</th>
+                                        <th>状态</th>
+                                        <th>申请时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in latest_leaves %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if leave.applicant.avatar %}
+                                                    <img src="{{ leave.applicant.avatar.url }}" alt="头像" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                        {{ leave.applicant.name|default:leave.applicant.username|first|upper }}
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div>{{ leave.applicant.name|default:leave.applicant.username }}</div>
+                                                    <small class="text-muted">{{ leave.applicant.department }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {% if leave.leave_type == 'sick' %}bg-danger
+                                                {% elif leave.leave_type == 'annual' %}bg-info
+                                                {% elif leave.leave_type == 'affair' %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ leave.get_leave_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div>{{ leave.start|date:"m-d H:i" }}</div>
+                                            <div class="text-muted small">至 {{ leave.end|date:"m-d H:i" }}</div>
+                                        </td>
+                                        <td>
+                                            {% with hours=leave.duration_hours|default:0 %}
+                                                {% if hours >= 24 %}
+                                                    {{ hours|floatformat:0|div:24 }}天 {{ hours|floatformat:0|mod:24 }}小时
+                                                {% else %}
+                                                    {{ hours }}小时
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {% if leave.state == 'running' %}bg-warning
+                                                {% elif leave.state == 'done' %}bg-success
+                                                {% elif leave.state == 'reject' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ leave.get_state_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ leave.create_time|date:"m-d H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'approval:leave_detail' leave.sn %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> 查看
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-calendar-x fs-3"></i>
+                            <p class="mt-2">暂无请假申请</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第三行：快速操作 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-lightning me-2"></i>快速操作
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'oasystem:user_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-people"></i> 用户管理
+                        </a>
+                        <a href="{% url 'approval:leave_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-check"></i> 我的请假
+                        </a>
+                        <a href="{% url 'approval:leave_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> 新建请假
+                        </a>
+                        <a href="{% url 'approval:pending_list' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-clipboard-check"></i> 审批列表
+                        </a>
+                        {% if request.user.is_staff %}
+                        <a href="/admin/" class="btn btn-outline-secondary">
+                            <i class="bi bi-gear"></i> 管理后台
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'attendance:index' %}" class="btn btn-outline-info">
+                            <i class="bi bi-clock-history"></i> 考勤管理
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第四行：系统状态 -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>系统信息
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-calendar me-2 text-muted"></i>
+                                    当前日期：{{ today|date:"Y年m月d日" }}
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-clock me-2 text-muted"></i>
+                                    当前时间：<span id="currentTime"></span>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-person-badge me-2 text-muted"></i>
+                                    登录用户：{{ user.name|default:user.username }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-building me-2 text-muted"></i>
+                                    系统版本：OA系统 v1.0
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-shield-check me-2 text-muted"></i>
+                                    系统状态：<span class="badge bg-success">运行正常</span>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-database me-2 text-muted"></i>
+                                    数据库连接：正常
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// 实时更新时间
+
+function updateCurrentTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('zh-CN', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('currentTime').textContent = timeString;
+}
+
+// 请假分布图表
+{% if leave_stats %}
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('leaveChart');
+
+    // 准备数据
+    const labels = [];
+    const data = [];
+    let total = 0;
+
+    {% for stat in leave_stats %}
+        labels.push("{{ stat.leave_type }}");
+        data.push({{ stat.cnt }});
+        total += {{ stat.cnt }};
+    {% endfor %}
+
+    // 颜色数组
+    const backgroundColors = [
+        'rgba(255, 99, 132, 0.8)',   // 病假 - 红色
+        'rgba(54, 162, 235, 0.8)',   // 年假 - 蓝色
+        'rgba(255, 206, 86, 0.8)',   // 事假 - 黄色
+        'rgba(75, 192, 192, 0.8)',   // 婚假 - 青色
+        'rgba(153, 102, 255, 0.8)',  // 产假 - 紫色
+        'rgba(255, 159, 64, 0.8)',   // 其他 - 橙色
+    ];
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '请假人数',
+                data: data,
+                backgroundColor: backgroundColors.slice(0, labels.length),
+                borderColor: backgroundColors.slice(0, labels.length).map(c => c.replace('0.8', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${context.label}: ${value}人 (${percent}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        callback: function(value) {
+                            return value + '人';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+});
+{% endif %}
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 启动实时时钟
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+
+    // 为统计卡片添加动画效果
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // 卡片悬停效果
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+        });
+    });
+});
+</script>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.border-primary { border-left: 4px solid #0d6efd !important; }
+.border-warning { border-left: 4px solid #ffc107 !important; }
+.border-info { border-left: 4px solid #0dcaf0 !important; }
+.border-success { border-left: 4px solid #198754 !important; }
+.text-primary { color: #0d6efd !important; }
+.text-warning { color: #ffc107 !important; }
+.text-info { color: #0dcaf0 !important; }
+.text-success { color: #198754 !important; }
+</style>
+{% endblock %}

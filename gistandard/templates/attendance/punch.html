@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}手机打卡{% endblock %}
+{% block content %}
+<div class="card mx-auto" style="max-width:400px">
+  <div class="card-header">今日打卡</div>
+  <div class="card-body text-center">
+    <p>班次：{{ punch.shift }}</p>
+    <p>上班：{{ punch.punch_in|default:'未打卡' }}</p>
+    <p>下班：{{ punch.punch_out|default:'未打卡' }}</p>
+    <div class="d-grid gap-2">
+      <a href="{% url 'attendance:punch_in' %}" class="btn btn-primary">上班打卡</a>
+      <a href="{% url 'attendance:punch_out' %}" class="btn btn-success">下班打卡</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

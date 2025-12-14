@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load system_tags %}
+{% block title %}员工管理{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-3">
+    <div class="card">
+      <div class="card-header">部门筛选</div>
+      <div class="card-body">
+        {% dept_tree dept_tree request.GET.dept %}
+      </div>
+    </div>
+  </div>
+  <div class="col-9">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between">
+        <span>员工列表</span>
+        <div>
+          <a href="{% url 'oasystem:user_import' %}" class="btn btn-sm btn-outline-primary">批量导入</a>
+          <a href="{% url 'oasystem:export_users' %}" class="btn btn-sm btn-outline-success">导出 CSV</a>
+          <a href="{% url 'users:register' %}" class="btn btn-sm btn-primary">新增员工</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+          <div class="col-auto">
+            <input type="text" class="form-control" name="kw" placeholder="工号/姓名" value="{{ request.GET.kw }}">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-secondary">搜索</button>
+          </div>
+        </form>
+        <table class="table table-bordered table-hover">
+          <thead>
+          <tr><th>头像</th>
+            <th>工号</th>
+            <th>姓名</th>
+            <th>部门</th>
+            <th>职位</th>
+            <th>手机</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for u in users %}
+          {% if u.id %}
+          <tr>
+            <td>
+              {% if u.avatar %}
+              <img src="{{ u.avatar.url }}" width="40" height="40" style="border-radius: 50%">
+              {% else %}
+              <img src="/static/img/default.png" width="40" height="40" style="border-radius: 50%">
+              {% endif %}
+            </td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.name }}</td>
+            <td>{{ u.department|default:'-' }}</td>
+            <td>{{ u.position|default:'-' }}</td>
+            <td>{{ u.phone|default:'-' }}</td>
+            <!-- === 新增：状态切换列 start === -->
+            <td>
+              <form method="post" action="{% url 'oasystem:change_status' pk=u.id %}" class="d-inline">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm d-inline w-auto"
+                        onchange="this.form.submit()">
+                  {% for val, label in u.STATUS_CHOICES %}
+                  <option value="{{ val }}" {% if u.status == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td>
+              {% if perms.users.can_edit_user_btn %}
+              <a href="{% url 'oasystem:user_edit' pk=u.id %}" class="btn btn-sm btn-warning">编辑</a>
+              {% endif %}
+              {% if perms.users.can_del_user_btn %}
+              <a href="{% url 'oasystem:user_del' pk=u.id %}" onclick="return confirm('确认删除?')" class="btn btn-sm btn-danger">删除</a>
+              {% endif %}
+              {% if not perms.users.can_edit_user_btn and not perms.users.can_del_user_btn %}
+              <span class="badge badge-secondary">只读</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+          </tbody>
+        </table>
+        {# 分页 #}
+        {% if users.has_other_pages %}
+        <nav>
+          <ul class="pagination pagination-sm">
+            {% for p in users.paginator.page_range %}
+            <li class="page-item {% if p == users.number %}active{% endif %}">
+              <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ p }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

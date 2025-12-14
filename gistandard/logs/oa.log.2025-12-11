@@ -1,0 +1,16 @@
+INFO 2025-12-11 23:27:33,612 autoreload Watching for file changes with StatReloader
+INFO 2025-12-11 23:27:47,945 autoreload D:\Tools\Python312\code\django5\OAProject1\gistandard\gistandard\settings.py changed, reloading.
+INFO 2025-12-11 23:27:48,335 autoreload Watching for file changes with StatReloader
+INFO 2025-12-11 23:28:39,970 autoreload D:\Tools\Python312\code\django5\OAProject1\gistandard\gistandard\settings.py changed, reloading.
+INFO 2025-12-11 23:28:40,356 autoreload Watching for file changes with StatReloader
+INFO 2025-12-11 23:28:40,356 autoreload Watching for file changes with StatReloader
+INFO 2025-12-11 23:28:52,471 basehttp "GET / HTTP/1.1" 200 237
+INFO 2025-12-11 23:28:52,471 basehttp "GET / HTTP/1.1" 200 237
+INFO 2025-12-11 23:28:56,170 basehttp "GET /users/ HTTP/1.1" 200 2364
+INFO 2025-12-11 23:28:56,170 basehttp "GET /users/ HTTP/1.1" 200 2364
+WARNING 2025-12-11 23:28:56,191 log Not Found: /ws/notify/
+WARNING 2025-12-11 23:28:56,191 log Not Found: /ws/notify/
+WARNING 2025-12-11 23:28:56,192 basehttp "GET /ws/notify/ HTTP/1.1" 404 2781
+WARNING 2025-12-11 23:28:56,192 basehttp "GET /ws/notify/ HTTP/1.1" 404 2781
+INFO 2025-12-11 23:30:00,254 autoreload D:\Tools\Python312\code\django5\OAProject1\gistandard\gistandard\settings.py changed, reloading.
+INFO 2025-12-11 23:30:00,254 autoreload D:\Tools\Python312\code\django5\OAProject1\gistandard\gistandard\settings.py changed, reloading.

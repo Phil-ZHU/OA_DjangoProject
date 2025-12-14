@@ -1,0 +1,9 @@
+{% for d in nodes %}
+  <li>
+    <strong>{{ d.name }}</strong>
+    {% if d.leader %}（负责人：{{ d.leader.name }}）{% endif %}
+    {% if d.children.exists %}
+      <ul>{% include 'system/dept_leader_item.html' with nodes=d.children %}</ul>
+    {% endif %}
+  </li>
+{% endfor %}

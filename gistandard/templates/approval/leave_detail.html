@@ -1,0 +1,146 @@
+<!-- approval/templates/approval/leave_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}请假详情{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="bi bi-file-text"></i> 请假申请详情
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- 返回按钮 -->
+            <div class="mb-3">
+                <a href="{% url 'approval:leave_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回列表
+                </a>
+            </div>
+
+            <!-- 基本信息 -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">单号</th>
+                            <td>{{ leave.sn }}</td>
+                        </tr>
+                        <tr>
+                            <th>申请人</th>
+                            <td>{{ leave.applicant.name|default:leave.applicant.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>请假类型</th>
+                            <td>
+                                <span class="badge
+                                    {% if leave.leave_type == 'sick' %}bg-danger
+                                    {% elif leave.leave_type == 'annual' %}bg-info
+                                    {% elif leave.leave_type == 'affair' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ leave.get_leave_type_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>状态</th>
+                            <td>
+                                <span class="badge
+                                    {% if leave.state == 'running' %}bg-warning
+                                    {% elif leave.state == 'done' %}bg-success
+                                    {% elif leave.state == 'reject' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ leave.get_state_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">开始时间</th>
+                            <td>{{ leave.start|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>结束时间</th>
+                            <td>{{ leave.end|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>请假天数</th>
+                            <td>{{ leave.duration_days }}天</td>
+                        </tr>
+                        <tr>
+                            <th>申请时间</th>
+                            <td>{{ leave.create_time|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 请假事由 -->
+            <div class="mb-4">
+                <h5><i class="bi bi-chat-left-text"></i> 请假事由</h5>
+                <div class="border rounded p-3 bg-light">
+                    {{ leave.reason|linebreaks }}
+                </div>
+            </div>
+
+            <!-- 审批记录（如果有） -->
+            {% if approval_nodes %}
+            <div class="mb-4">
+                <h5><i class="bi bi-list-check"></i> 审批记录</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>序号</th>
+                                <th>审批角色</th>
+                                <th>审批人</th>
+                                <th>审批结果</th>
+                                <th>审批意见</th>
+                                <th>审批时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for node in approval_nodes %}
+                            <tr>
+                                <td>{{ node.seq }}</td>
+                                <td>{{ node.role }}</td>
+                                <td>
+                                    {% if node.approver %}
+                                        {{ node.approver.name|default:node.approver.username }}
+                                    {% else %}
+                                        <span class="text-muted">待审批</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if node.action == 'agree' %}
+                                        <span class="badge bg-success">同意</span>
+                                    {% elif node.action == 'reject' %}
+                                        <span class="badge bg-danger">驳回</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">未审批</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ node.comment|default:"-" }}</td>
+                                <td>
+                                    {% if node.approver %}
+                                        {{ node.update_time|date:"Y-m-d H:i" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

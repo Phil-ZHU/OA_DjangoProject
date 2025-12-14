@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}批量导入{% endblock %}
+{% block content %}
+<div class="card mx-auto" style="max-width:500px">
+  <div class="card-header">批量导入员工</div>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="card-body">
+      <div class="mb-3">
+        <label>选择 Excel 文件（.xls 格式，字段顺序：工号,姓名,部门,职位,手机,初始密码）</label>
+        <input type="file" class="form-control" name="file" accept=".xls" required>
+      </div>
+      <p class="text-muted">每次最多 500 行，重复工号自动跳过。</p>
+    </div>
+    <div class="card-footer text-end">
+      <a href="{% url 'oasystem:user_list' %}" class="btn btn-secondary">返回</a>
+      <button class="btn btn-primary">上传</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

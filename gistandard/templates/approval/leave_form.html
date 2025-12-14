@@ -1,0 +1,257 @@
+<!-- approval/templates/approval/leave_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}新建请假申请{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-calendar-plus"></i> 新建请假申请
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- 返回链接 -->
+                    <div class="mb-3">
+                        <a href="{% url 'approval:leave_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> 返回列表
+                        </a>
+                    </div>
+
+                    <!-- 消息提示 -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                <i class="bi bi-exclamation-circle"></i> {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- 请假表单 -->
+                    <form method="post" action="{% url 'approval:leave_create' %}" id="leaveForm">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <!-- 请假类型 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="type" class="form-label">请假类型 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="">请选择请假类型</option>
+                                    <option value="sick">病假</option>
+                                    <option value="annual">年假</option>
+                                    <option value="affair">事假</option>
+                                    <option value="marriage">婚假</option>
+                                    <option value="maternity">产假</option>
+                                    <option value="other">其他</option>
+                                </select>
+                            </div>
+
+                            <!-- 开始时间 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="start" class="form-label">开始时间 <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="start" name="start" required>
+                            </div>
+
+                            <!-- 结束时间 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="end" class="form-label">结束时间 <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="end" name="end" required>
+                                <div class="form-text">结束时间必须晚于开始时间</div>
+                            </div>
+
+                            <!-- 计算天数 -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">预计天数</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="duration" readonly>
+                                    <span class="input-group-text">天</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 请假事由 -->
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">请假事由 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reason" name="reason" rows="4" required
+                                      placeholder="请详细描述请假事由..."></textarea>
+                            <div class="form-text">请提供详细的请假理由，以便审批人了解情况</div>
+                        </div>
+
+                        <!-- 表单按钮 -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-clockwise"></i> 重置
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> 提交申请
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 温馨提示 -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6><i class="bi bi-info-circle"></i> 温馨提示：</h6>
+                    <ul class="small text-muted mb-0">
+                        <li>请准确填写请假时间，系统会自动计算请假时长</li>
+                        <li>提交后可在"我的请假"中查看审批进度</li>
+                        <li>审批通过后请假生效，请及时安排工作交接</li>
+                        <li>如有疑问，请联系人事部门</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DEBUG: leave_form.html loaded');
+
+    const form = document.getElementById('leaveForm');
+    const startInput = document.getElementById('start');
+    const endInput = document.getElementById('end');
+    const typeSelect = document.getElementById('type');
+    const reasonTextarea = document.getElementById('reason');
+    const durationInput = document.getElementById('duration');
+
+    // 计算请假天数
+    function calculateDuration() {
+        if (startInput.value && endInput.value) {
+            const startDate = new Date(startInput.value);
+            const endDate = new Date(endInput.value);
+
+            // 计算天数差（包含开始和结束当天）
+            const timeDiff = endDate - startDate;
+            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+
+            durationInput.value = daysDiff > 0 ? daysDiff : 0;
+        } else {
+            durationInput.value = '';
+        }
+    }
+
+    // 设置默认时间
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    const formatDateTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    // 设置默认时间为明天9:00-17:00
+    const startTime = new Date(tomorrow);
+    startTime.setHours(9, 0, 0, 0);
+
+    const endTime = new Date(tomorrow);
+    endTime.setHours(17, 0, 0, 0);
+
+    startInput.value = formatDateTime(startTime);
+    endInput.value = formatDateTime(endTime);
+    typeSelect.value = 'affair';  // 默认选择事假
+    reasonTextarea.value = '工作需要请假处理相关事宜';  // 设置默认事由
+
+    // 计算初始时长
+    calculateDuration();
+
+    console.log('DEBUG: Form inputs initialized');
+
+    // 监听时间变化，重新计算天数
+    startInput.addEventListener('change', calculateDuration);
+    endInput.addEventListener('change', calculateDuration);
+
+    // 表单提交验证
+    form.addEventListener('submit', function(e) {
+        console.log('DEBUG: Form submit triggered');
+
+        // 收集表单数据用于调试
+        const formData = {
+            type: typeSelect.value,
+            start: startInput.value,
+            end: endInput.value,
+            reason: reasonTextarea.value
+        };
+        console.log('DEBUG: Form data:', formData);
+
+        // 验证必填字段
+        if (!formData.type) {
+            e.preventDefault();
+            alert('请选择请假类型');
+            return false;
+        }
+
+        if (!formData.start || !formData.end) {
+            e.preventDefault();
+            alert('请填写开始和结束时间');
+            return false;
+        }
+
+        if (!formData.reason || formData.reason.trim() === '') {
+            e.preventDefault();
+            alert('请填写请假事由');
+            return false;
+        }
+
+        // 验证时间
+        const startDate = new Date(formData.start);
+        const endDate = new Date(formData.end);
+
+        if (endDate <= startDate) {
+            e.preventDefault();
+            alert('结束时间必须晚于开始时间！');
+            return false;
+        }
+
+        // 验证请假天数不超过30天
+        const timeDiff = endDate - startDate;
+        const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+        if (daysDiff > 30) {
+            e.preventDefault();
+            alert('单次请假不能超过30天！');
+            return false;
+        }
+
+        console.log('DEBUG: Form validation passed, submitting...');
+
+        // 显示提交中提示
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 提交中...';
+        submitBtn.disabled = true;
+
+        // 3秒后恢复按钮状态（防止重复提交）
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 3000);
+
+        return true;
+    });
+
+    // 自动关闭消息提醒
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            if (alert.classList.contains('alert-dismissible')) {
+                const bsAlert = new bootstrap.Alert(alert);
+                setTimeout(() => bsAlert.close(), 5000);
+            }
+        });
+    }, 5000);
+});
+</script>
+{% endblock %}

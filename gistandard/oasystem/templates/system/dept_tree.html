@@ -1,0 +1,13 @@
+{% load system_tags %}   <!-- 后面写模板标签 -->
+<ul class="list-unstyled">
+  {% for node in nodes %}
+    <li>
+      <a href="?dept={{ node.id }}" class="badge {% if dept_id == node.id|stringformat:'s' %}bg-primary{% else %}bg-secondary{% endif %} text-white text-decoration-none">
+        {{ node.name }}
+      </a>
+      {% if node.children %}
+        <div class="ms-3 mt-1">{% dept_tree node.children dept_id %}</div>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>

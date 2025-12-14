@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}工作台 - OA系统{% endblock %}
+
+{% block content %}
+<!-- 页面头部：欢迎语 + 日期 -->
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="mb-1">
+            👋 欢迎回来，{{ user.name|default:user.username }}
+        </h2>
+        <p class="text-muted mb-0">
+            今日日期：{% now "Y年m月d日" %} · 工作日：{% now "l" %}
+        </p>
+    </div>
+    <!-- 快捷操作按钮 -->
+    <div>
+        <button class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-calendar-plus"></i> 新建审批
+        </button>
+        <button class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-bell"></i> 消息中心
+        </button>
+    </div>
+</div>
+
+<!-- 数据统计卡片区域 -->
+<div class="row g-4 mb-5">
+    <!-- 待办审批卡片 -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1">待处理审批</p>
+                        <h3 class="mb-0 text-danger">0</h3>
+                        <small class="text-success"><i class="bi bi-arrow-down"></i> 今日无新增</small>
+                    </div>
+                    <div class="bg-danger/10 rounded-circle p-3">
+                        <i class="bi bi-clipboard-check text-danger fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'approval:pending_list' %}" class="text-primary text-decoration-none">
+                        查看详情 <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 已完成审批卡片 -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1">本月已完成</p>
+                        <h3 class="mb-0 text-primary">8</h3>
+                        <small class="text-success"><i class="bi bi-arrow-up"></i> 较上月 +2</small>
+                    </div>
+                    <div class="bg-primary/10 rounded-circle p-3">
+                        <i class="bi bi-check2-circle text-primary fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="#" class="text-primary text-decoration-none">
+                        查看统计 <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 待阅通知卡片 -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1">未读通知</p>
+                        <h3 class="mb-0 text-warning">3</h3>
+                        <small class="text-muted"><i class="bi bi-clock"></i> 最近1条在10分钟前</small>
+                    </div>
+                    <div class="bg-warning/10 rounded-circle p-3">
+                        <i class="bi bi-bell-ring text-warning fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="#" class="text-primary text-decoration-none">
+                        标记已读 <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 考勤统计卡片 -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1">本月考勤</p>
+                        <h3 class="mb-0 text-success">22/22</h3>
+                        <small class="text-muted"><i class="bi bi-check"></i> 全勤</small>
+                    </div>
+                    <div class="bg-success/10 rounded-circle p-3">
+                        <i class="bi bi-calendar-check text-success fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="#" class="text-primary text-decoration-none">
+                        考勤详情 <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 下半部分：审批趋势 + 最近操作 -->
+<div class="row g-4">
+    <!-- 审批趋势图表 -->
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i> 近7天审批趋势
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary active">周</button>
+                    <button class="btn btn-outline-primary">月</button>
+                    <button class="btn btn-outline-primary">季</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 简易图表占位（可替换为ECharts/Chart.js） -->
+                <div class="w-100" style="height: 280px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-chart-line fs-3 mb-2"></i>
+                        <p>图表区域 - 审批数量趋势</p>
+                        <small>可集成 ECharts/Chart.js 实现可视化</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近操作记录 -->
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> 最近操作
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item border-0 pb-3">
+                        <div class="d-flex">
+                            <div class="bg-primary/10 rounded-circle p-2 me-3">
+                                <i class="bi bi-check2 text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="mb-1 fw-medium">审批通过：事假申请</p>
+                                <p class="text-muted mb-0 small">今天 10:23</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item border-0 pb-3">
+                        <div class="d-flex">
+                            <div class="bg-warning/10 rounded-circle p-2 me-3">
+                                <i class="bi bi-file-plus text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="mb-1 fw-medium">创建审批：加班申请</p>
+                                <p class="text-muted mb-0 small">昨天 16:45</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item border-0 pb-3">
+                        <div class="d-flex">
+                            <div class="bg-success/10 rounded-circle p-2 me-3">
+                                <i class="bi bi-box-arrow-right text-success"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="mb-1 fw-medium">退出登录</p>
+                                <p class="text-muted mb-0 small">昨天 18:00</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item border-0">
+                        <div class="d-flex">
+                            <div class="bg-info/10 rounded-circle p-2 me-3">
+                                <i class="bi bi-box-arrow-in-right text-info"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="mb-1 fw-medium">登录系统</p>
+                                <p class="text-muted mb-0 small">昨天 09:05</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                <div class="mt-3 text-center">
+                    <a href="#" class="text-primary text-decoration-none small">
+                        查看全部操作记录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入Bootstrap图标 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+// 初始化图表
+const chartDom = document.querySelector('.card-body .w-100');
+const myChart = echarts.init(chartDom);
+const option = {
+    xAxis: {
+        type: 'category',
+        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+    },
+    yAxis: {
+        type: 'value'
+    },
+    series: [{
+        data: [1, 3, 2, 5, 4, 2, 0],
+        type: 'line',
+        smooth: true,
+        itemStyle: { color: '#0d6efd' },
+        areaStyle: { color: 'rgba(13, 110, 253, 0.1)' }
+    }]
+};
+myChart.setOption(option);
+window.addEventListener('resize', () => myChart.resize());
+</script>
+
+{% endblock %}

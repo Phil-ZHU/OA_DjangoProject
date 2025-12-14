@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}组织汇报图{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">组织汇报关系</div>
+  <div class="card-body">
+    <ul>
+      {% include 'system/dept_leader_item.html' with nodes=roots %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
